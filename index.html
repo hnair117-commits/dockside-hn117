@@ -5,61 +5,170 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SPLASH — Ask Dockside</title>
   <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: #172c35; background: #f3f6f7; }
-    main { max-width: 760px; margin: auto; padding: 20px; }
-    h1 { margin: 0; font-size: 1.7rem; }
-    header p { margin: 4px 0 18px; }
-    #chat { min-height: 45vh; }
-    .bubble { width: fit-content; max-width: 94%; padding: 12px 15px; margin: 12px 0; border-radius: 12px; background: white; border: 1px solid #d6e0e4; overflow-wrap: anywhere; }
-    .user { margin-left: auto; background: #dceff5; }
-    .error { color: #8a2020; border-color: #dbaaaa; }
-    .message { white-space: pre-wrap; }
-    .meta { display: block; margin-top: 9px; font-size: .8rem; color: #4c616a; }
-    form { display: flex; gap: 8px; margin-top: 20px; }
-    input { min-width: 0; flex: 1; }
-    input, button { font: inherit; padding: 12px; border: 1px solid #8199a3; border-radius: 6px; }
-    button { color: white; background: #156078; cursor: pointer; }
-    button:disabled { opacity: .6; cursor: wait; }
-    :focus-visible { outline: 3px solid #dd9100; outline-offset: 2px; }
-    .hint { font-size: .85rem; color: #4c616a; }
-    main.booking-open { max-width: 1120px; }
-    .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
-    .chat-column { min-width: 0; }
-    #booking-launch { flex: 0 0 44px; padding: 8px; }
-    .chat-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    #booking-panel { background: white; border: 1px solid #d6e0e4; border-radius: 12px; padding: 18px; align-self: start; }
-    #booking-panel[hidden] { display: none; }
-    #booking-form { display: block; }
-    #booking-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
-    #booking-panel label { display: block; margin: 12px 0; }
-    #booking-panel input, #booking-panel select { display: block; width: 100%; max-width: 100%; min-width: 0; font: inherit; padding: 10px; }
-    .demo-note { font-weight: 600; }
-    #booking-details, #booking-status { white-space: pre-line; overflow-wrap: anywhere; }
-    @media (min-width: 850px) { .booking-open .layout { grid-template-columns: minmax(0, 1fr) 340px; } }
-    @media (max-width: 480px) { main { padding: 14px; } .bubble { max-width: 100%; } }
+    :root { color-scheme: light; --page:#e6f1f8; --ink:#173650; --muted:#526d82; --accent:#277e8b; --panel:rgba(242,249,253,.83); --bubble:rgba(255,255,255,.77); --field:rgba(255,255,255,.8); --line:rgba(70,116,148,.18); --user:#d5eaf1; --button:#224b68; --button-text:#fff; --wave-one:#d9eaf4; --wave-two:#c9e1ef; --wave-three:#b9d8e9; --art:#467f9d; --shadow:0 18px 55px rgba(45,88,118,.09); }
+    :root[data-theme="dark"] { color-scheme:dark; --page:#0e2032; --ink:#e1eef7; --muted:#a9c0d2; --accent:#85c9ca; --panel:rgba(23,47,68,.92); --bubble:rgba(41,68,90,.9); --field:#1b3a52; --line:rgba(160,196,218,.22); --user:#245667; --button:#94ced5; --button-text:#102c40; --wave-one:#132c42; --wave-two:#18384f; --wave-three:#20445b; --art:#77abc4; --shadow:0 18px 55px rgba(0,0,0,.16); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; scroll-padding-top:24px; }
+    body { margin:0; font:15px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--page); color:var(--ink); min-height:100vh; }
+    button,input,select { font:inherit; }
+    button,a,input,select { -webkit-tap-highlight-color:transparent; }
+    button { cursor:pointer; }
+    button:disabled { opacity:.5; cursor:wait; }
+    button { border:1px solid var(--line); border-radius:12px; padding:11px 16px; background:var(--button); color:var(--button-text); }
+    button:hover:not(:disabled) { filter:brightness(1.06); }
+    :focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
+    a { color:inherit; }
+    [hidden] { display:none !important; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    .site-header { max-width:1340px; margin:0 auto; padding:27px 36px; display:flex; align-items:center; justify-content:space-between; gap:28px; position:relative; z-index:1; }
+    .brand { display:flex; align-items:center; gap:11px; text-decoration:none; flex-shrink:0; }
+    .brand svg { width:65px; height:55px; color:var(--accent); }
+    .brand-name { display:block; font-size:20px; font-weight:750; line-height:1.2; letter-spacing:-.6px; }
+    .brand-location { display:block; font-size:10px; letter-spacing:2.8px; text-transform:uppercase; margin-top:6px; color:var(--muted); }
+    nav { display:flex; align-items:center; flex-wrap:wrap; gap:27px; }
+    nav a { font-size:13px; font-weight:550; text-decoration:none; padding:6px 0; border-bottom:2px solid transparent; }
+    nav a:hover { border-color:var(--accent); }
+    #night-shade { display:flex; align-items:center; gap:8px; padding:9px 12px; background:transparent; color:var(--ink); font-size:12px; border-radius:30px; white-space:nowrap; }
+    #night-shade svg { width:16px; height:16px; }
+    #night-shade[aria-pressed="true"] { background:var(--field); }
+    .intro { position:relative; text-align:center; padding:22px 20px 30px; }
+    .eyebrow { color:var(--accent); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2.5px; margin:0 0 8px; }
+    .intro h1 { font-size:clamp(28px,3vw,39px); letter-spacing:-1.5px; font-weight:650; line-height:1.2; margin:0 0 10px; }
+    .intro p:last-child { margin:0; color:var(--muted); font-size:14px; }
+    .workspace { position:relative; max-width:1600px; margin:auto; padding:0 24px; }
+    main { position:relative; max-width:720px; margin:0 auto; padding:0; }
+    main.booking-open { max-width:900px; }
+    .layout { display:grid; grid-template-columns:minmax(0,1fr); gap:20px; align-items:start; }
+    .chat-column { min-width:0; height:620px; max-height:76svh; min-height:440px; display:flex; flex-direction:column; background:var(--panel); backdrop-filter:blur(16px); border:1px solid var(--line); border-radius:25px; box-shadow:var(--shadow); overflow:hidden; }
+    .chat-heading { display:flex; align-items:center; gap:13px; padding:22px 25px; border-bottom:1px solid var(--line); flex-shrink:0; }
+    .splash-mark { width:43px; height:43px; display:grid; place-items:center; background:var(--user); color:var(--accent); border-radius:14px; }
+    .splash-mark svg { width:29px; height:29px; }
+    .chat-heading h2 { margin:0; font-size:23px; letter-spacing:2px; font-weight:750; line-height:1.2; }
+    .chat-heading p { margin:3px 0 0; color:var(--muted); font-size:11px; }
+    .guide-label { margin-left:auto; color:var(--accent); font-size:10px; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:6px; }
+    .guide-label::before { content:""; display:block; width:5px; height:5px; background:var(--accent); border-radius:50%; }
+    #chat { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; padding:20px 24px; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+    .bubble { width:fit-content; max-width:89%; padding:13px 16px; margin:0 0 16px; border-radius:16px 16px 16px 4px; background:var(--bubble); border:1px solid var(--line); overflow-wrap:anywhere; font-size:14px; }
+    .user { margin-left:auto; border-radius:16px 16px 4px 16px; background:var(--user); }
+    .error { color:var(--ink); border-color:#ac6d6d; }
+    .message { white-space:pre-wrap; }
+    .meta { display:block; margin-top:10px; font-size:10px; line-height:1.5; color:var(--muted); }
+    #question-form { display:flex; align-items:center; gap:8px; padding:15px 19px 8px; border-top:1px solid var(--line); margin:0; flex-shrink:0; }
+    input,select { border:1px solid var(--line); border-radius:10px; color:var(--ink); background:var(--field); padding:11px 12px; }
+    input::placeholder { color:var(--muted); opacity:1; }
+    #question { min-width:0; flex:1; width:0; font-size:13px; height:45px; }
+    #send { height:45px; padding:9px 17px; font-size:13px; }
+    #booking-launch { flex:0 0 40px; height:40px; padding:7px; font-size:22px; background:transparent; color:var(--ink); }
+    .hint { font-size:11px; color:var(--muted); }
+    .chat-footnote { margin:0; padding:0 22px 15px; font-size:10px; line-height:1.5; flex-shrink:0; }
+    .chat-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; }
+    .chat-actions button { font-size:12px; padding:8px 11px; }
+    #booking-panel { min-width:0; background:var(--panel); backdrop-filter:blur(16px); border:1px solid var(--line); border-radius:25px; padding:24px; align-self:start; box-shadow:var(--shadow); }
+    .booking-eyebrow { margin-bottom:6px; }
+    #booking-title { font-size:23px; letter-spacing:-.5px; line-height:1.2; margin:0 0 12px; }
+    #booking-form { display:block; margin:16px 0; }
+    #booking-fields { border:0; padding:0; margin:0; min-width:0; }
+    #booking-panel label { display:block; margin:12px 0; font-size:12px; font-weight:600; }
+    #booking-panel input,#booking-panel select { display:block; width:100%; max-width:100%; min-width:0; font:inherit; padding:10px; margin-top:5px; }
+    #booking-panel select { text-overflow:ellipsis; }
+    #booking-details,#booking-status { white-space:pre-line; overflow-wrap:anywhere; font-size:12px; }
+    #booking-total { font-size:18px; font-weight:650; }
+    #demo-pay { width:100%; font-size:13px; }
+    #close-booking { background:transparent; color:var(--ink); font-size:12px; padding:8px 14px; }
+    .demo-note { border-top:1px solid var(--line); padding-top:14px; font-size:11px; color:var(--muted); margin:18px 0 0; }
+    .weather-card { position:relative; width:100%; max-width:720px; margin:0 auto 18px; padding:15px 18px; background:var(--panel); border:1px solid var(--line); border-radius:18px; backdrop-filter:blur(12px); box-shadow:0 8px 28px rgba(45,88,118,.04); display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .weather-title { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:650; }
+    .weather-title svg { color:var(--accent); width:19px; height:19px; flex-shrink:0; }
+    #weather-reading { font-size:13px; margin:4px 0; font-weight:550; }
+    #weather-updated { font-size:10px; color:var(--muted); margin:0; }
+    #weather-refresh { background:transparent; color:var(--muted); padding:5px 8px; font-size:16px; }
+    .weather-icon { display:block; width:25px; height:25px; color:var(--accent); margin:0 0 8px; }
+    .page-footer { position:relative; text-align:center; padding:24px 20px 30px; font-size:10px; color:var(--muted); letter-spacing:1.3px; }
+    .coastal-scene { position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; }
+    body { isolation:isolate; }
+    .waves { position:absolute; bottom:-35px; left:-4%; width:108%; height:57%; min-height:350px; animation:tide 24s ease-in-out infinite alternate; }
+    .wave-one { fill:var(--wave-one); } .wave-two { fill:var(--wave-two); } .wave-three { fill:var(--wave-three); }
+    .activity-art { position:absolute; color:var(--art); opacity:.28; width:200px; height:150px; animation:bob 11s ease-in-out infinite alternate; }
+    .art-kayak { top:35%; left:-25px; width:220px; }
+    .art-sup { top:24%; right:1%; width:155px; height:220px; animation-delay:-4s; }
+    .art-swim { top:64%; left:8%; width:145px; animation-delay:-7s; opacity:.2; }
+    .art-yoga { bottom:3%; left:24%; width:170px; animation-delay:-2s; }
+    .art-sauna { bottom:5%; right:3%; width:185px; animation-delay:-5s; }
+    .art-dragon { bottom:20%; right:-40px; width:240px; opacity:.19; animation-delay:-8s; }
+    .art-wake { bottom:29%; left:0; width:150px; opacity:.16; animation-delay:-3s; }
+    @keyframes bob { to { transform:translateY(5px); } }
+    @keyframes tide { to { transform:translate(1%,5px); } }
+    dialog { width:min(470px,calc(100% - 32px)); padding:30px; color:var(--ink); background:var(--page); border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow); }
+    dialog::backdrop { background:rgba(9,33,53,.4); backdrop-filter:blur(4px); }
+    dialog h2 { font-size:25px; letter-spacing:-.6px; margin:0 0 12px; }
+    dialog p { color:var(--muted); font-size:14px; }
+    .dialog-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+    @media (min-width:950px) { .booking-open .layout { grid-template-columns:minmax(0,1fr) 320px; } }
+    @media (min-width:1280px) { .weather-card { position:absolute; top:0; left:calc(50% - 542px); width:160px; display:block; margin:0; padding:18px; } .workspace:has(.booking-open) .weather-card { left:calc(50% - 632px); } #weather-reading { font-size:14px; margin:14px 0 8px; white-space:pre-line; } #weather-refresh { position:absolute; top:10px; right:8px; padding:2px 4px; font-size:13px; } .weather-title { font-size:11px; gap:5px; } .weather-title svg { width:15px; } }
+    @media (max-width:949px) { main.booking-open { max-width:720px; } .site-header { padding:22px 24px; gap:18px; } nav { gap:19px; } .brand svg { width:50px; } .brand-name { font-size:18px; } .brand-location { font-size:9px; } .art-dragon { right:-100px; } .art-kayak { left:-90px; } }
+    @media (max-width:700px) { .site-header { flex-wrap:wrap; padding:18px 20px 8px; gap:16px; } .site-header nav { order:3; flex-basis:100%; justify-content:center; gap:clamp(15px,4vw,30px); } nav a { font-size:12px; } #night-shade { margin-left:auto; } .intro { padding:24px 18px; } .intro h1 { letter-spacing:-1px; font-size:29px; } .intro p:last-child { max-width:270px; margin:auto; font-size:12px; } .workspace { padding:0 15px; } .weather-card { padding:11px 15px; border-radius:15px; gap:8px; } .weather-title { font-size:11px; } #weather-reading { font-size:12px; } #weather-updated { font-size:9px; } .weather-icon { display:none; } .chat-column { height:600px; max-height:78svh; min-height:420px; border-radius:21px; } .chat-heading { padding:19px; } .chat-heading h2 { font-size:21px; } #chat { padding:18px 15px; } .bubble { max-width:94%; font-size:13px; padding:12px 14px; } #question-form { padding:12px 11px 8px; gap:6px; } #question { font-size:12px; padding:10px; } #send { padding:9px 12px; font-size:12px; } #booking-launch { flex-basis:35px; height:38px; } .chat-footnote { padding:0 15px 13px; font-size:9px; } .guide-label { font-size:9px; } .activity-art { opacity:.13; } .art-sup { right:-55px; top:25%; } .art-swim { left:-70px; } .art-yoga { left:5%; bottom:0; } .art-sauna { right:-40px; bottom:0; } .page-footer { font-size:9px; padding:22px 15px; } }
+    @media (max-width:420px) { #night-shade span { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); } #night-shade { padding:10px; } .brand svg { width:46px; height:43px; } .brand-name { font-size:18px; } .brand-location { letter-spacing:2px; } .guide-label { display:none; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; scroll-behavior:auto !important; } }
   </style>
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem('dockside-night-shade') === 'dark' ? 'dark' : 'light'; } catch {}</script>
 </head>
 <body>
-  <main>
-    <header>
-      <h1>SPLASH</h1>
-      <p>Ask Dockside · Dockside Paddle Co., Dublin</p>
-    </header>
+
+  
+  <div class="coastal-scene" aria-hidden="true">
+    <svg width="0" height="0" focusable="false" style="position:absolute"><defs>
+      <symbol id="art-kayak" viewBox="0 0 220 140"><path fill="currentColor" d="M12 91Q95 110 209 85L186 104Q85 119 25 104Z"/><circle cx="103" cy="52" r="8" fill="currentColor"/><path d="M103 65L95 84 122 88M104 67L132 66 146 78M64 39L155 103" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M48 29Q45 42 68 48L74 39ZM148 96Q169 96 171 111L159 115Z" fill="currentColor"/><path d="M32 121Q100 128 183 118" fill="none" stroke="currentColor" stroke-width="2" opacity=".35"/></symbol>
+      <symbol id="art-sup" viewBox="0 0 170 220"><ellipse cx="88" cy="174" rx="70" ry="5" fill="currentColor"/><circle cx="87" cy="40" r="9" fill="currentColor"/><path d="M85 55L77 98 65 166M78 98L100 123 105 166M84 64L111 79 125 66M83 62L105 50 117 56" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M121 49L139 161M134 149L143 148 146 172 139 176Z" stroke="currentColor" stroke-width="4" fill="currentColor"/><ellipse cx="88" cy="193" rx="48" ry="2" fill="currentColor" opacity=".25"/></symbol>
+      <symbol id="art-swim" viewBox="0 0 200 100"><circle cx="139" cy="54" r="9" fill="currentColor"/><path d="M63 65L119 58M78 60L105 29 130 40" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 77Q30 68 50 77T90 77 130 77 170 77M37 89Q65 84 91 89T149 89" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+      <symbol id="art-yoga" viewBox="0 0 200 140"><ellipse cx="100" cy="111" rx="85" ry="5" fill="currentColor"/><circle cx="128" cy="65" r="7" fill="currentColor"/><path d="M118 75L91 86 57 78 30 102M91 86L79 105M116 76L138 104M91 86L113 37" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="100" cy="129" rx="61" ry="2" fill="currentColor" opacity=".25"/></symbol>
+      <symbol id="art-sauna" viewBox="0 0 220 170"><path d="M36 120V69Q36 32 94 32H153Q187 32 187 68V120ZM22 123H203L191 135H35Z" fill="currentColor"/><path d="M62 115V61Q62 45 86 45M156 45V115" fill="none" stroke="var(--wave-two)" stroke-width="3"/><rect x="93" y="64" width="34" height="52" rx="2" fill="var(--wave-two)"/><path d="M83 23Q72 13 84 2M115 22Q104 11 116 1M145 23Q135 12 146 2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M38 149Q107 159 189 148" stroke="currentColor" stroke-width="2" fill="none" opacity=".3"/></symbol>
+      <symbol id="art-dragon" viewBox="0 0 260 150"><path d="M17 100Q115 118 222 96L228 75 243 68 251 78 238 83 236 105Q131 140 31 117Z" fill="currentColor"/><g fill="currentColor"><circle cx="65" cy="69" r="7"/><circle cx="105" cy="69" r="7"/><circle cx="145" cy="69" r="7"/><circle cx="185" cy="66" r="7"/></g><path d="M64 80L58 100M104 80L98 102M144 80L138 102M184 77L178 100M66 85L83 95 95 130M106 85L123 95 135 130M146 85L163 95 175 130M186 82L203 92 215 127" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M47 139Q139 146 219 134" fill="none" stroke="currentColor" stroke-width="2" opacity=".25"/></symbol>
+      <symbol id="art-wake" viewBox="0 0 180 180"><circle cx="86" cy="57" r="8" fill="currentColor"/><path d="M84 71L76 101 56 119M76 101L102 111 110 136M84 74L112 81 136 63M88 82L112 86 136 63" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M139 60L180 20" fill="none" stroke="currentColor" stroke-width="2"/><path d="M36 127Q89 137 128 140L134 147Q83 148 29 133Z" fill="currentColor"/><path d="M12 151Q63 164 115 155M28 166Q70 173 99 166" fill="none" stroke="currentColor" stroke-width="2" opacity=".4"/></symbol>
+    </defs></svg>
+    <svg class="waves" viewBox="0 0 1440 700" preserveAspectRatio="none" focusable="false"><path class="wave-one" d="M0 120C260 10 450 240 720 120S1180 20 1440 115V700H0Z"/><path class="wave-two" d="M0 260C300 100 470 330 810 230S1200 190 1440 275V700H0Z"/><path class="wave-three" d="M0 460C260 300 520 490 820 390S1200 340 1440 415V700H0Z"/></svg>
+    <svg class="activity-art art-kayak" focusable="false"><use href="#art-kayak"/></svg>
+    <svg class="activity-art art-sup" focusable="false"><use href="#art-sup"/></svg>
+    <svg class="activity-art art-swim" focusable="false"><use href="#art-swim"/></svg>
+    <svg class="activity-art art-yoga" focusable="false"><use href="#art-yoga"/></svg>
+    <svg class="activity-art art-sauna" focusable="false"><use href="#art-sauna"/></svg>
+    <svg class="activity-art art-dragon" focusable="false"><use href="#art-dragon"/></svg>
+    <svg class="activity-art art-wake" focusable="false"><use href="#art-wake"/></svg>
+  </div>
+  <header class="site-header" id="home">
+    <a class="brand" href="#home" aria-label="Dockside Paddle Co. Dublin home">
+      <svg viewBox="0 0 85 65" aria-hidden="true" focusable="false"><path d="M7 36Q39 46 77 32L66 44Q37 53 16 43Z" fill="currentColor"/><circle cx="41" cy="18" r="5" fill="currentColor"/><path d="M40 26L35 37 48 39M41 27L55 26M25 12L61 45" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M3 52Q17 44 31 52T59 52 83 52M14 61Q27 54 40 60T70 60" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".65"/></svg>
+      <span><span class="brand-name">Dockside Paddle Co.</span><span class="brand-location">Dublin · On the water</span></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#home">Home</a><a href="#splash-chat" data-chat-question="Which activities are offered?">Activities</a><a href="#splash-chat" data-chat-question="Show me the current sessions, times, prices and places remaining.">Sessions</a><a href="#about" data-info="about">About</a><a href="#contact" data-info="contact">Contact</a>
+    </nav>
+    <button id="night-shade" type="button" aria-pressed="false" aria-label="Night Shade"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span>Night Shade</span></button>
+  </header>
+  <section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Dublin, from a different perspective</p>
+    <h1 id="page-title">Good days start on the water.</h1>
+    <p>Find your next activity. Let a little local knowledge lead the way.</p>
+  </section>
+  <div class="workspace">
+    <aside class="weather-card" aria-label="Current Dublin weather">
+      <div><div class="weather-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14V5a3 3 0 0 1 6 0v9a5 5 0 1 1-6 0Z M12 8v10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Dublin Weather</div><p id="weather-reading" role="status">Loading weather…</p><p id="weather-updated">Checking current conditions</p></div>
+      <button id="weather-refresh" type="button" aria-label="Refresh Dublin weather" title="Refresh weather">↻</button>
+    </aside>
+  <main id="splash-chat" aria-label="Ask Dockside chatbot">
     <div class="layout">
     <div class="chat-column">
+      <div class="chat-heading"><span class="splash-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 11Q10 5 16 11T28 11M4 18Q10 12 16 18T28 18M4 25Q10 19 16 25T28 25" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg></span><div><h2>SPLASH</h2><p>Ask Dockside. Make the most of your day.</p></div><span class="guide-label">Your local guide</span></div>
     <section id="chat" role="log" aria-label="Chat messages" aria-live="polite" aria-relevant="additions text"></section>
     <form id="question-form">
       <input id="question" aria-label="Your question" placeholder="Ask about sessions, prices or wind…" autocomplete="off" required>
       <button id="send" type="submit">Send</button>
       <button id="booking-launch" type="button" aria-label="Open demo booking panel" title="Open demo booking panel" aria-controls="booking-panel" aria-expanded="false">↗</button>
     </form>
-    <p class="hint">Session data and current weather are fetched again for every question. Suitable wind does not guarantee a session will run.</p>
-    <p class="hint demo-note">Demo only — no payment taken or real booking made</p>
+    <p class="hint chat-footnote">Fresh session &amp; weather information. Meeting a wind limit does not guarantee a session will run.</p>
     </div>
     <aside id="booking-panel" aria-labelledby="booking-title" hidden>
-      <h2 id="booking-title">Mock booking</h2>
-      <p class="demo-note">Demo only — no payment taken or real booking made</p>
+      <p class="eyebrow booking-eyebrow">Your next activity</p>
+      <h2 id="booking-title">Demo booking</h2>
       <p class="hint">Use a sample name. Do not enter payment credentials. Nothing is reserved or sent for payment.</p>
       <form id="booking-form">
         <fieldset id="booking-fields">
@@ -73,10 +182,14 @@
       </form>
       <p id="booking-status" role="status" aria-live="polite"></p>
       <button id="close-booking" type="button">Close</button>
+      <p class="demo-note">Demo only — no real payment or booking</p>
     </aside>
     </div>
     <noscript>Enable JavaScript to use SPLASH.</noscript>
   </main>
+  </div>
+  <footer class="page-footer">A little adventure. A little sea air. A different side of Dublin.</footer>
+  <dialog id="info-panel" aria-labelledby="info-title"><h2 id="info-title"></h2><p id="info-copy"></p><div class="dialog-actions"><button id="info-ask" type="button"></button><button id="info-close" type="button">Close</button></div></dialog>
   <script>
     'use strict';
 
@@ -253,6 +366,7 @@ Distinguish missing information from sold-out sessions and sessions that are not
       const rows = parseSessions(csv);
       // Preserve fresh weather fetching and deterministic wind assessment; capacity remains independent.
       calculateWindFacts(rows, JSON.parse(weatherText));
+      updateWeatherCard(JSON.parse(weatherText));
       return rows;
     }
 
@@ -472,6 +586,7 @@ Distinguish missing information from sold-out sessions and sessions that are not
         let weather;
         try { weather = JSON.parse(weatherText); }
         catch { throw new Error('The weather service returned invalid JSON. Please try again later.'); }
+        updateWeatherCard(weather);
         const sessions = parseSessions(csv);
         resolveSelection(question, sessions);
         const intent = bookingIntent(question);
@@ -528,6 +643,78 @@ Distinguish missing information from sold-out sessions and sessions that are not
         input.focus();
       }
     });
+  </script>
+
+  <script>
+    // Presentation controls do not change chatbot or booking data and calculations.
+    const shade = document.getElementById('night-shade');
+    function applyShade(dark) {
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      shade.setAttribute('aria-pressed', String(dark));
+    }
+    applyShade(document.documentElement.dataset.theme === 'dark');
+    shade.addEventListener('click', () => {
+      const dark = document.documentElement.dataset.theme !== 'dark';
+      applyShade(dark);
+      try { localStorage.setItem('dockside-night-shade', dark ? 'dark' : 'light'); } catch { /* Theme still works when storage is blocked. */ }
+    });
+
+    function updateWeatherCard(weather) {
+      const current = weather?.current;
+      // Temperature may be negative; accept finite signed numbers, but never blank/null values.
+      const rawTemperature = current?.temperature_2m;
+      const validTemperature = (typeof rawTemperature === 'number' || (typeof rawTemperature === 'string' && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(rawTemperature.trim()))) && Number.isFinite(Number(rawTemperature));
+      const wind = windNumber(current?.wind_speed_10m);
+      const degrees = weather?.current_units?.temperature_2m === '°C';
+      const windUnits = weather?.current_units?.wind_speed_10m === 'km/h';
+      const parts = [validTemperature && degrees ? Number(rawTemperature) + ' °C' : 'Temperature unavailable', wind !== null && windUnits ? 'Wind ' + wind + ' km/h' : 'Wind unavailable'];
+      document.getElementById('weather-reading').textContent = parts.join('\n');
+      const time = new Intl.DateTimeFormat('en-GB', { timeZone:'Europe/Dublin', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }).format(new Date());
+      document.getElementById('weather-updated').textContent = (validTemperature && degrees || wind !== null && windUnits ? 'Updated ' + time + ' · Dublin' : 'Current readings unavailable');
+    }
+    let weatherCardBusy = false;
+    async function refreshWeatherCard() {
+      if (weatherCardBusy) return;
+      weatherCardBusy = true;
+      const refresh = document.getElementById('weather-refresh');
+      refresh.disabled = true;
+      document.getElementById('weather-reading').textContent = 'Loading weather…';
+      try {
+        const weather = JSON.parse(await request(WEATHER_URL, { cache:'no-store' }, 'Weather data'));
+        updateWeatherCard(weather);
+      } catch {
+        document.getElementById('weather-reading').textContent = 'Weather unavailable';
+        document.getElementById('weather-updated').textContent = 'Please try refreshing';
+      } finally { weatherCardBusy = false; refresh.disabled = false; }
+    }
+    document.getElementById('weather-refresh').addEventListener('click', refreshWeatherCard);
+    refreshWeatherCard();
+
+    function askFromNavigation(question) {
+      document.getElementById('splash-chat').scrollIntoView({ block:'start' });
+      if (busy) { input.focus(); return; }
+      input.value = question;
+      form.requestSubmit();
+    }
+    document.querySelectorAll('[data-chat-question]').forEach(link => link.addEventListener('click', event => {
+      event.preventDefault();
+      askFromNavigation(link.dataset.chatQuestion);
+    }));
+    const info = document.getElementById('info-panel');
+    let infoQuestion = '';
+    document.querySelectorAll('[data-info]').forEach(link => link.addEventListener('click', event => {
+      event.preventDefault();
+      const contact = link.dataset.info === 'contact';
+      document.getElementById('info-title').textContent = contact ? 'Get in touch' : 'Welcome to Dockside';
+      document.getElementById('info-copy').textContent = contact
+        ? 'Need to speak with the team? Ask SPLASH for the current provider contact details. If they are not listed, SPLASH will let you know. Demo bookings on this site do not contact the provider.'
+        : 'Discover Dockside Paddle Co. in Dublin with SPLASH, your guide to current activities, session times, prices and places. The chat checks fresh session and weather information for each question. The booking panel is a demonstration only.';
+      infoQuestion = contact ? 'What are the provider contact details for Dockside Paddle Co.?' : 'Which activities are offered?';
+      document.getElementById('info-ask').textContent = contact ? 'Ask for contact details' : 'Explore activities';
+      info.showModal();
+    }));
+    document.getElementById('info-close').addEventListener('click', () => info.close());
+    document.getElementById('info-ask').addEventListener('click', () => { info.close(); askFromNavigation(infoQuestion); });
   </script>
 </body>
 </html>
